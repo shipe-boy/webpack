@@ -330,6 +330,47 @@ module.exports = {
 }
 ```
 
+## 3.5、打包时清空先前打包的文件夹
+
+**安装：**
+
+```
+npm install --save-dev clean-webpack-plugin
+```
+
+**使用：**
+
+```
+//引入
+const { CleanWebpackPlugin } = require('clean-webpack-plugin');
+ 
+ 
+ //使用
+const webpackConfig = {
+    plugins: [
+        new CleanWebpackPlugin(),
+    ],
+};
+```
+
+## 3.6、在模块中（js文件中）注入全局变量
+
+webpack内置的，不需要另下插件。（可在webpack官网，插件，DefinePlugin）
+
+**使用：**
+
+```
+//引入webpcak
+const webpack = require('webpack')
+
+new webpack.DefinePlugin({
+	//要引入的全局变量 形式  API: '变量'
+	 API11: JSON.stringify(API),	//官网中例子，API可外部引入
+	API1: "'http://loaclhost:3000'"// 或者：引号中为变量
+})
+
+```
+
 
 
 # 四、多页打包和热更新
@@ -433,3 +474,233 @@ new HtmlWebpackPlugin({
 ```
 
 vue脚手架3中有用到
+
+## 4.2、热更新
+
+**安装：**
+
+```
+npm i webpack-dev-server -D
+```
+
+**配置：**
+
+新加devServer配置选项
+
+```
+devServer: {
+		open: false,	//是否自动打开浏览器
+		port: 8080,	//监听的端口
+		contentBase: './dist',	//默认可访问的资源是根目录下所有，也可以设置可访问资源的路径
+		proxy:{
+			'/user':'http://localhost:3000'
+		}
+		/* proxy:{	//前端接口：/api/user      后端接口：/api/user,可以配置pathRewrite
+			'/api'{
+				target: 'http://localhost:3000',
+				pathRewrite: {'/api': ''}	//重写路径	后台配置就直接是'/user'
+			}
+		} */
+	}
+```
+
+注： webpack是基于node的，开启的端口服务是用express来搭建本地端口服务的，去node_module里可以找到express。
+
+**启动：**
+
+```
+npx webpack-dev-server
+```
+
+注： 也可以在package.json中配置启动命令
+
+**配置跨域：**
+
+webpack-dev-server是基于express构建的，我们在根目录下创建server.js搭建本地3000端口服务，在a.js中发起请求。
+
+webpack.config.js中配置跨域：
+
+前台： 8080端口		后台： 3000端口
+
+```
+devServer: {
+		open: false,	//是否自动打开浏览器
+		port: 8080,	//监听的端口
+		contentBase: './dist',	//默认可访问的资源是根目录下所有，也可以设置可访问资源的路径
+		proxy:{	//跨域配置
+			'/user':'http://localhost:3000'
+		}
+		/* proxy:{	//前端接口：/api/user      后端接口：/api/user,可以配置pathRewrite
+			'/api'{
+				target: 'http://localhost:3000',
+				pathRewrite: {'/api': ''}	//重写路径	后台配置就直接是'/user'
+			}
+		} */
+	}
+```
+
+另一种方式：
+
+直接在当前地址下配置接口：
+
+```
+devServer: {
+		open: false,	//是否自动打开浏览器
+		port: 8080,	//监听的端口
+		contentBase: './dist',	//默认可访问的资源是根目录下所有，也可以设置可访问资源的路径
+		//前台 8080端口  当前地址下配置请求
+		before(app){
+			app.get('/user', (req, res) => {
+				res.send({
+					name: '哈哈哈'
+				})
+			})
+		}
+	}
+```
+
+## 4.3、node环境中启动webpack
+
+插件：
+
+```
+npm install webpack-dev-middleware --save-dev
+```
+
+配置：
+
+```
+//创建一个本地的服务，测试webpack-dev-server 的跨域请求
+//前面我们了解到 webpack是基于node的   webpack-dev-server是基于express的
+
+const express = require('express')
+
+//引入webpack和webpack-dev-middleware
+const webpack = require('webpack');
+const middleware = require('webpack-dev-middleware');
+//引入webpack配置文件
+const config = require('./webpack.config.js')
+const compiler = webpack(config);
+
+
+const app = express();
+
+//使用webpack中间件
+app.use(
+  middleware(compiler)
+);
+
+//监听的路由
+app.get('/user',(req,res)=>{
+	res.send({
+		name: '哈哈哈'
+	})
+})
+
+
+
+
+app.listen('3000', ()=>{
+	console.log('3000端口已经启动！')
+})
+
+```
+
+之后node运行文件时会自动运行webpack。端口是你node运行的端口，不再是webpack中配置的端口了
+
+# 五、babel配置
+
+## 5.1、babel
+
+官网中有详细的配置流程：<https://www.babeljs.cn/setup#installation> 
+
+打包后可以运行，但是比如数组的map方法，还是[].map，这样在（IE）低版本浏览器中没有该方法。
+
+解决：（官网中搜索polyfill）
+
+​	安装	npm install --save @babel/polyfill 
+
+​	使用： 	import "@babel/polyfill"; （在js中引入，或者require("@babel/polyfill"); ）
+
+babel/polyfill 填充高版本js语法，他将所有es6语法都用es5改写了。打包后代码体积会变很大。
+
+​	优化： 配置.babelrc中的presets选项，进行按需引入
+
+​		官网找presets写成数组来配置选项，然后配置targets运行的浏览器（官网搜targets）
+
+```
+{
+  "presets": [
+		["@babel/preset-env", {	//配置项
+	        "targets": {
+				"chrome": "75"，
+    			"ie": "11"
+	        }
+		}]
+  ]
+}
+```
+
+​		想要targets生效，还需要配置`useBuiltIns`（官网搜）
+
+```
+{
+  "presets": [
+		["@babel/preset-env", {	
+	        "targets": {
+				"chrome": "75"
+	        },
+			"useBuiltIns": "usage"	// 选项： "entry"  false  "usage"
+		}]
+  ]
+}
+```
+
+## 5.2、区分打包环境
+
+### 一、文件分离
+
+​	webpcak.base.js		//基础的打包配置
+
+​	webpack.dev.js		//开发环境中的打包配置
+
+​	webpack.pro.js		//生产环境中的打包配置
+
+### 二、使用插件
+
+​	**安装：**
+
+```
+npm i webpack-merge -D
+```
+
+​	**配置：**
+
+```
+//引入插件，融合两个webpack配置文件
+const merge = require('webpack-merge')
+
+//引入基础配置
+const baseConfig = require('./webpack.base.js')
+
+//生产环境的配置
+const proConfig = {
+	mode: 'production',	//打包后大代码不会被压缩，否则默认是生产环境，代码会压缩
+}
+module.exports = merge(baseConfig, proConfig)
+```
+
+### 三、打包
+
+之前打包会去找webpack.config.js，现在没有了，如何打包呢？
+
+更改package.json， --config 文件名
+
+```
+"scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --config webpack.pro.js",
+    "dev": "webpack-dev-server --config webpack.dev.js"
+  },
+```
+

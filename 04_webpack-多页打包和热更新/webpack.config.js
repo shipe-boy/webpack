@@ -37,9 +37,9 @@ module.exports = {
 			filename: 'a.html',	//生成的文件名字
 			template: './index.html', //以根目录的index.html为模板
 			chunks: ['a']	,//对应多入口块名，即键名
-			inject: false,	//不能自动注入才能设置title
-			title: '我是a页面'	,//支持ejs语法，动态设置页面title
-			date: new Date()
+			// inject: false,	//不能自动注入才能设置title
+			// title: '我是a页面'	,//支持ejs语法，动态设置页面title
+			// date: new Date()
 		}),
 		new HtmlWebpackPlugin({
 			filename: 'b.html',	//生成的文件名字
@@ -52,5 +52,27 @@ module.exports = {
 			filename: 'css/[name].css'
 		}),
 		new OptimizeCssAssetsPlugin()
-	]
+	],
+	devServer: {
+		open: false,	//是否自动打开浏览器
+		port: 8080,	//监听的端口
+		contentBase: './dist',	//默认可访问的资源是根目录下所有，也可以设置可访问资源的路径
+		//前台 8080端口  后台 3000 端口
+		/* proxy:{
+			'/user':'http://localhost:3000'
+		} */
+		proxy:{	//前端接口：/api/user      后端接口：/api/user,可以配置pathRewrite
+			'/api':{
+				target: 'http://localhost:3000',
+				pathRewrite: {'/api': ''}	//重写路径	后台配置就直接是'/user'
+			}
+		}
+		// before(app){
+		// 	app.get('/user', (req, res) => {
+		// 		res.send({
+		// 			name: '哈哈哈'
+		// 		})
+		// 	})
+		// }
+	}
 }

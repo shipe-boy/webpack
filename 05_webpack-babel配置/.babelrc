@@ -1,0 +1,10 @@
+{
+  "presets": [
+		["@babel/preset-env", {	//配置项
+	        "targets": {
+				"chrome": "75"
+	        },
+			"useBuiltIns": "usage"	// 选项： "entry"  false  "usage"
+		}]
+  ]
+}

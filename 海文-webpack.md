@@ -704,3 +704,81 @@ module.exports = merge(baseConfig, proConfig)
   },
 ```
 
+###四、抽离webpcak配置文件（优化目录结构）
+
+​	1、将webpack.config、webpack.base、webpack.pro放入build目录下
+
+​	2、更改package.json中webpack打包时配置的路径
+
+​	3、更改webpack.config中出口文件位置
+
+# 六、代码分离
+
+将第三方模块和项目逻辑抽离成不同的文件
+
+## 1、手动分割（不推荐）
+
+1、如果是npm中下载的引用，可以将其单独引入js文件中，在挂载到window上
+
+2、逻辑代码中用到直接去window中取
+
+3、修改webpack.config中入口文件，改成多入口。
+
+注意：入口文件中，挂载到window上的第三方模块要在逻辑代码之前，否则取不到第三方模块
+
+## 2、利用webpack配置分割
+
+```
+optimization: {	//优化项
+		splitChunks: {
+			chunks: 'all'
+		}
+	}
+	
+//这样引入webpack自动会分离	
+const axios = () => import('axios')
+import('axios')
+//点击事件也可以单开文件异步引入，点击事件触发时加载
+```
+
+​	
+
+# 七、自定义loaders
+
+## 1、引入自定义loaders
+
+webpack.congif.js配置，用自己的loaders
+
+```
+module: {
+		rules: [
+			{
+				test: /\.js$/,
+				use:[path.join(__dirname, 'loaders', 'my-babel-loader.js')]
+			}
+		]
+	},
+	
+//或者 配置resolveLoader,
+module: {
+		rules: [
+			{
+				test: /\.js$/,
+				use: ["my-babel-loader.js"]
+			}
+		]
+	},
+	resolveLoader: {
+		modules: ['node_modules',path.join(__dirname, 'loaders')],
+	}
+```
+
+注：resolveLoaders:<https://webpack.js.org/configuration/resolve/#resolveloader> 
+
+
+
+## 2、写自己的loaders
+
+<https://webpack.docschina.org/api/loaders/#src/components/Sidebar/Sidebar.jsx> 
+
+看

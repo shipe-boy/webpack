@@ -9,9 +9,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "webpack": "^4.30.0"
+    "webpack": "^5.75.0"
   },
   "devDependencies": {
-    "webpack-cli": "^3.3.1"
+    "webpack-cli": "^5.0.1"
   }
 }
